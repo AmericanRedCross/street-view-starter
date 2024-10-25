@@ -22,6 +22,10 @@ ruff format src
 ruff check src --fix
 ```
 
+### Commits
+
+Please follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification when creating your commit messages.
+
 ## For maintainers
 
 ### Checkout a PR branch from a fork

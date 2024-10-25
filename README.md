@@ -81,15 +81,15 @@ We want a 360 image for each of the sampled points. There is more than option fo
 For example, if you're continuing from the example in previous steps and already generated a `Three_Rivers_Michigan_USA_points.gpkg` file:
 
 ```bash
-python -m src.download_images data/interim/Three_Rivers_Michigan_USA_points.gpkg MAPILLARY data/raw/images/Three_Rivers_Michigan_USA/
+python -m src.assign_images data/interim/Three_Rivers_Michigan_USA_points.gpkg MAPILLARY data/raw/images/Three_Rivers_Michigan_USA/ data/interim/Three_Rivers_Michigan_USA_points_images.gpkg
 ```
 
 ### 3. Assign a Green View score to each image/feature
 
-Now that we have a point feature for each image, we want to analyze each image 
-and assign a score to the relevant point feature. We can use the 
-[`score_images.py`]('./src/score_images.py') script for this. We have two 
-methods implemented. 
+Now that we have a point feature for each image, we want to calculate a Green View 
+Index (GVI) score for each image and assign that score to the relevant point feature. 
+We can use the [`assign_gvi_to_points.py`](./src/assign_gvi_to_points.py) script 
+for this. 
 
 With the `PIXELS` option, we can calculate a Green View Index (GVI) score.
 For more information on how GVI is calculated, see Li et al. (2015), 
@@ -109,7 +109,21 @@ saves an output to a new file.
 python -m src.score_images data/interim/Three_Rivers_Michigan_USA_points_images.gpkg SEGMENTATION data/processed/Three_Rivers_segmentation_score.gpkg
 ```
 
+## Config files
 
+> ![NOTE]
+> Support for config files is a work in progress. We will add config file support progressively to the pipeline steps.  See [Issue #38](https://github.com/AmericanRedCross/street-view-green-view/issues/38) for progress.
+
+All command-line options for the pipeline CLI steps can also be provided in a [TOML-format](https://toml.io/en/) configuration file. An example config file can be found in [`configs/example.toml`](./configs/example.toml).
+
+To use a config file, you can pass a config file using the `--config` option flag. For example, if running `create_points`, you can do:
+
+```bash
+python -m src.create_points \
+    data/raw/Three_Rivers_Michigan_USA_line.zip \
+    data/interim/Three_Rivers_Michigan_USA_points.gpkg \
+    --config configs/example.toml
+```
 
 ## Project Organization
 
@@ -129,7 +143,7 @@ python -m src.score_images data/interim/Three_Rivers_Michigan_USA_points_images.
     └── src                            <- Source code for use in this project.
         └── __init__.py                <- Makes src a Python module
         └── create_points.py           <- Creates a list of points along the roads of an area
-        └── download_images.py         <- Downloads images from the list of points
+        └── assign_images.py           <- Matches images to the list of points (downloading or from local)
         └── assign_gvi_to_points.py    <- Calculates a Green View Index (GVI) from the images
 
 --------

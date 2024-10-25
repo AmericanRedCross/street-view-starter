@@ -36,6 +36,7 @@ dependencies = [
   "transformers",
   "tqdm",
   "typer",
+  "typer-config",
 ]
 
 ## TOOLS ##

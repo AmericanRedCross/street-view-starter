@@ -1,0 +1,4 @@
+[create_points]
+mini_dist = 30.0
+drop_null = true
+highway_types = ["primary", "secondary"]

@@ -3,6 +3,7 @@ See: https://github.com/mittrees/Treepedia_Public/blob/master/Treepedia/createPo
 """
 
 from pathlib import Path
+from typing import List
 
 try:
     from typing import Annotated
@@ -11,12 +12,15 @@ except ImportError:
     from typing_extensions import Annotated
 
 import geopandas as gpd
+from loguru import logger
 import numpy as np
 import shapely
 import typer
+from typer_config import use_toml_config
+from typer_config.callbacks import argument_list_callback
 
 DEFAULT_MINI_DIST = 20.0  # meters
-HIGHWAY_VALUES_TO_KEEP = {
+DEFAULT_HIGHWAY_VALUES_TO_KEEP = [
     "primary",
     "primary_link",
     "secondary",
@@ -24,17 +28,21 @@ HIGHWAY_VALUES_TO_KEEP = {
     "tertiary",
     "tertiary_link",
     "residential",
-}
+]
 
 app = typer.Typer()
 
 
-def filter_by_highway_type(gdf: gpd.GeoDataFrame):
+def filter_by_highway_type(
+    gdf: gpd.GeoDataFrame, highway_types: List[str] = DEFAULT_HIGHWAY_VALUES_TO_KEEP
+):
     """Returns a copy of a GeoDataFrame of OpenStreetMap road features filtered by
     highway type.
 
     Args:
         gdf (geopandas.GeoDataFrame): OpenStreetMap features.
+        highway_types (List[str]): List of OSM highway types to keep. Features whose
+            'highway' value does not match the provided list will be filtered out.
 
     Returns:
         geopandas.GeoDataFrame: Copy of input GeoDataFrame of features filtered by
@@ -45,7 +53,7 @@ def filter_by_highway_type(gdf: gpd.GeoDataFrame):
             "'highway' column not found in input GeoDataFrame. "
             "Input data must be of OpenStreetMap roads."
         )
-    out_gdf = gdf[gdf["highway"].isin(HIGHWAY_VALUES_TO_KEEP)].copy()
+    out_gdf = gdf[gdf["highway"].isin(highway_types)].copy()
     return out_gdf
 
 
@@ -88,6 +96,8 @@ def create_points(gdf: gpd.GeoDataFrame, mini_dist: float = DEFAULT_MINI_DIST):
             "Input GeoDataFrame contains null geometries. "
             "Rerun with --drop-null to exclude these features."
         )
+    if (gdf.geom_type == "MultiLineString").any():
+        gdf = gdf.explode()
     if not (gdf.geom_type == "LineString").all():
         raise ValueError("Input GeoDataFrame must contain only LineString features.")
     # Drop metadata other than 'osm_id'
@@ -103,6 +113,7 @@ def create_points(gdf: gpd.GeoDataFrame, mini_dist: float = DEFAULT_MINI_DIST):
 
 
 @app.command()
+@use_toml_config(section=["create_points"])
 def main(
     in_file: Annotated[
         Path,
@@ -132,16 +143,31 @@ def main(
             help="Set whether features with null geometries should be removed",
         ),
     ] = False,
+    highway_types: Annotated[
+        List[str],
+        typer.Option(
+            "--highway-type",
+            help="Set which OSM highway types to keep from input features.",
+            callback=argument_list_callback,
+        ),
+    ] = DEFAULT_HIGHWAY_VALUES_TO_KEEP,
 ):
     """Create a dataset of interpolated points along OpenStreetMap roads."""
+    logger.debug("mini_dist: {}", mini_dist)
+    logger.debug("drop_null: {}", drop_null)
+    logger.debug("highway_types: {}", highway_types)
+
+    logger.info("Loading road features from: {}", in_file)
+
     gdf = gpd.read_file(in_file)
-    gdf = filter_by_highway_type(gdf)
+    gdf = filter_by_highway_type(gdf, highway_types=highway_types)
     if drop_null:
         gdf = gdf[~gdf.geometry.isna()]
     else:
         pass
     gdf = create_points(gdf, mini_dist=mini_dist)
     gdf.to_file(out_file)
+    logger.success("Interpolated points written to: {}", out_file)
 
 
 if __name__ == "__main__":
