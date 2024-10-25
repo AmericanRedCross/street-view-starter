@@ -87,7 +87,7 @@ def main(
         maptiler_api_key = "None"
 
     # Lookup the colourmap values for each GVI score
-    cmap = matplotlib.colormaps["viridis"]
+    cmap = matplotlib.colormaps["Greens"]
     gdf["gvi_norm"] = (gdf.gvi_score - np.min(gdf.gvi_score)) / (
         np.max(gdf.gvi_score) - np.min(gdf.gvi_score)
     )
