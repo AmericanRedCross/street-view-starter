@@ -86,14 +86,19 @@ python -m src.download_images data/interim/Three_Rivers_Michigan_USA_points.gpkg
 
 ### 3. Assign a Green View score to each image/feature
 
-Now that we have a point feature for each image, we want to calculate a Green View 
-Index (GVI) score for each image and assign that score to the relevant point feature. 
-We can use the [`assign_gvi_to_points.py`]('./src/assign_gvi_to_points.py') script 
-for this. 
+Now that we have a point feature for each image, we want to analyze each image 
+and assign a score to the relevant point feature. We can use the 
+[`score_images.py`]('./src/score_images.py') script for this. We have two 
+methods implemented. 
 
+With the `PIXELS` option, we can calculate a Green View Index (GVI) score.
 For more information on how GVI is calculated, see Li et al. (2015), 
 [_Who lives in greener neighborhoods?_](https://doi.org/10.1016/j.ufug.2015.07.006), 
 Urban Forestry & Urban Greening 14, pp.751--759.
+
+With the `SEGMENTATION` option, we can also use a pre-trained machine learning 
+model to label the parts of each image then store the percentage labelled 
+vegetation.
 
 #### Example
 
@@ -101,7 +106,7 @@ This example follows from the files and directories created in previous steps an
 saves an output to a new file. 
 
 ```bash
-python -m src.assign_gvi_to_points data/raw/mapillary data/interim/Three_Rivers_Michigan_USA_points_images.gpkg data/processed/Three_Rivers_GVI.gpkg
+python -m src.score_images data/interim/Three_Rivers_Michigan_USA_points_images.gpkg SEGMENTATION data/processed/Three_Rivers_segmentation_score.gpkg
 ```
 
 
