@@ -5,7 +5,6 @@ from typing import Annotated
 
 import geopandas as gpd
 from loguru import logger as log
-import numpy as np
 from pandas import Series
 from requests.exceptions import HTTPError
 from tenacity import RetryError
@@ -97,7 +96,7 @@ def main(
     log.info(gdf.head())
     log.info(
         "Are There Duplicates? {}",
-        gdf[gdf["image_id"] is not None and gdf["image_id"] != np.NaN]["image_id"]
+        gdf[gdf["image_id"] is not None and gdf["image_id"].notna()]["image_id"]
         .duplicated()
         .any(),
     )
