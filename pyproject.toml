@@ -17,6 +17,7 @@ dependencies = [
   "folium",
   "geopandas",
   "geopy",
+  "h3pandas",
   "loguru",
   "mapclassify",
   "matplotlib",

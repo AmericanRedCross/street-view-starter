@@ -47,6 +47,7 @@ If you are interested in joining the project, please check out [`CONTRIBUTING.md
     - For example, download [`Three_Rivers_Michigan_USA_line.zip`](https://drive.google.com/file/d/1fpI4I5KP2WyVD5PeytW_hoXZswOt0dwA/view?usp=drive_link) to `data/raw/Three_Rivers_Michigan_USA_line.zip`. Note that this Google Drive link is only accessible to approved project members.
 4. Make a copy of the `.env.example` file, removing the `.example` from the end of the filename.
     - To download images from [Mapillary](https://www.mapillary.com/) you will need to create a (free) account and replace `MY_MAPILLARY_CLIENT_TOKEN` in the `.env` file with your own token. See the "Setting up API access and obtaining a client token" section on this [Mapillary help page](https://help.mapillary.com/hc/en-us/articles/360010234680-Accessing-imagery-and-data-through-the-Mapillary-API). You only need to enable READ access scope on your token.
+    - To use OpenStreetMap as a basemap for any webmaps generated, you will need a MapTiler API key. To get a free API key, follow the instructions on [this page](https://docs.maptiler.com/cloud/api/authentication-key/). Once you have an API key, add a new line to your `.env` file: `MAPTILER_API_KEY = "MY_MAPTILER_API_KEY"` - replace the text between the quotes with the key generated on the MapTiler account page. 
 
 ### 1. Sample points from roads data
 
@@ -102,6 +103,36 @@ saves an output to a new file.
 
 ```bash
 python -m src.assign_gvi_to_points data/raw/mapillary data/interim/Three_Rivers_Michigan_USA_points_images.gpkg data/processed/Three_Rivers_GVI.gpkg
+```
+
+### 4. Visualize the results
+
+We provide an option here but we encourage you to explore different ways to visualize the results. We would love to know what you try that works and what doesn't. How can we improve on these guidance materials?
+
+#### Generate an H3 polygon layer
+
+We can generate an H3 polygon layer from the point layer. As an overlay it may make spatial trends more visible by merging some of the values from close together points. 
+
+### Example
+
+```bash
+# python -m src.create_webmap path/to/input_file.gpkg path/to/output_file.gpkg cell_resolution 
+python -m src.points_to_h3 data/processed/Three_Rivers_GVI.gpkg data/processed/Three_Rivers_h3_polygons_10.gpkg 10
+```
+
+The larger the number for the [H3 cell resolution](https://h3geo.org/docs/core-library/restable/), the smaller the individual hexagons. 
+
+#### Generate a web map
+
+We can generate an HTML file that contains javascript to display a web map showing the H3 polygons, styled by the mean GVI score for each polygon.
+
+To display an OpenStreetMap basemap under the data, you will need an API key from [MapTiler](https://www.maptiler.com/), a vector tiles provider. Once you have an API key, add it to your `.env` file (see [Setup section](#0-setup) for how to do this).
+
+### Example
+
+```bash
+# python -m src.create_webmap path/to/input_file.gpkg path/to/output/output_file.html default_zoom_for_webmap 
+python -m src.create_webmap data/processed/Three_Rivers_h3_polygons_10.gpkg data/processed/Three_Rivers_gvi_webmap.html 10
 ```
 
 ## Config files

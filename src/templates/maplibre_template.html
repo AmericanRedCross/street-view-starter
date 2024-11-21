@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{{ title }}</title>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@4.2.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@4.2.0/dist/maplibre-gl.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+        .maplibregl-popup {
+            max-width: 400px;
+            font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        }
+        .legend {
+            background-color: #fff;
+            border-radius: 3px;
+            bottom: 30px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            color: #000 ;
+            font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+            padding: 10px;
+            position: absolute;
+            right: 10px;
+            z-index: 1;
+            }
+
+        .legend h4 {
+          margin: 0 0 10px;
+        }
+
+        .legend div span {
+          border-radius: 50%;
+          display: inline-block;
+          height: 10px;
+          margin-right: 5px;
+          width: 10px;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="state-legend" class="legend"> 
+      <h4>Mean GVI score</h4>
+        <div><span style="background-color: {{ legend_patch_1  }}"></span>{{ legend_label_1}}</div>
+        <div><span style="background-color: {{ legend_patch_2  }}"></span>{{ legend_label_2}}</div>
+        <div><span style="background-color: {{ legend_patch_3  }}"></span>{{ legend_label_3}}</div>
+        <div><span style="background-color: {{ legend_patch_4  }}"></span>{{ legend_label_4}}</div>
+    </div>
+<div id="map"></div>
+<script>
+    const bounds = [
+    {{ bounds }}
+    ];
+    
+    const map = new maplibregl.Map({
+        container: 'map', // container id
+        {% if maptiler_api_key != 'None' -%}
+        style: 'https://api.maptiler.com/maps/dataviz/style.json?key={{ maptiler_api_key }}', // style URL
+        {% else -%}
+        style: {version: 8,sources: {},layers: []}, // blank style URL
+        {% endif %}
+        center: {{ centre_coords }}, // starting position [lng, lat]
+        zoom: {{ zoom }}, // starting zoom
+        maxBounds: bounds,
+        maplibreLogo: true
+    });
+    
+    map.on('load', () => {
+        map.addSource('gvi_hex', {
+            'type': 'geojson',
+            'data': {{ geojson }}
+            
+        });
+
+        // When a click event occurs on a feature in the states layer, open a popup at the
+        // location of the click, with description HTML from its properties.
+        map.on('click', 'gvi-scores', (e) => {
+            new maplibregl.Popup()
+                .setLngLat(e.lngLat)
+                .setHTML(e.features[0].properties.gvi_score)
+                .addTo(map);
+        });
+
+        // Change the cursor to a pointer when the mouse is over the states layer.
+        map.on('mouseenter', 'gvi-scores', () => {
+            map.getCanvas().style.cursor = 'pointer';
+        });
+
+        // Change it back to a pointer when it leaves.
+        map.on('mouseleave', 'gvi-scores', () => {
+            map.getCanvas().style.cursor = '';
+        });
+
+        map.addLayer({
+            'id': 'gvi-scores',
+            'type': 'fill',
+            'source': 'gvi_hex',
+            'paint':{
+                'fill-outline-color': 'grey',
+                'fill-opacity': 0.75, 
+                'fill-color': ['get', 'html_color']
+            }
+        });
+    });
+
+</script>
+</body>
+</html>
