@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 import geopandas as gpd
-import h3pandas
+import h3pandas  # noqa: F401
 import typer
 
 try:
