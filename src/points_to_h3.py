@@ -20,6 +20,10 @@ def main(
         Path,
         typer.Argument(help="Path to file containing point layer with GVI scores."),
     ],
+    score_field: Annotated[
+        str, 
+        typer.Argument(help="Field containing the score"),
+    ],
     output_file: Annotated[
         Path,
         typer.Argument(
@@ -39,6 +43,7 @@ def main(
 
     Args:
             input_file: Path to file containing point layer with GVI scores.
+            score_field: The field name from the input data containing the score
             cell_resolution: H3 cell resolution to aggregate to,
                 between 0 (largest) and 15 (smallest)
             aggregation_operations:
@@ -67,7 +72,11 @@ def main(
     else:
         raise Exception("Expected point data in interim data file but none found")
 
-    # Check data contains numeric gvi_score field
+    # Check data contains score field
+    if score_field in  gpd.read_file(input_file).columns: 
+        pass
+    else:
+        raise Exception("Specified score field not found in input file")
 
     # Load input data
     gdf = gpd.read_file(input_file)

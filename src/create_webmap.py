@@ -29,6 +29,10 @@ def main(
         Path,
         typer.Argument(help="Path to file containing h3 polygons."),
     ],
+    score_field: Annotated[
+        str,
+        typer.Argument(help="Name of field containing GVI score."),
+    ],
     filename: Annotated[
         str, typer.Argument(help="(Optional) Path to file for HTML output.")
     ] = "./data/processed/gvi_webmap.html",
@@ -49,7 +53,7 @@ def main(
         gdf = gdf.to_crs("EPSG:4326")
 
     # Round GVI score to make map labels more readable
-    gdf["gvi_score"] = round(gdf["gvi_score"], 2)
+    gdf[score_field] = round(gdf[score_field], 2)
 
     # get central coordinates of all features
     centre = (
@@ -88,8 +92,8 @@ def main(
 
     # Lookup the colourmap values for each GVI score
     cmap = matplotlib.colormaps["Greens"]
-    gdf["gvi_norm"] = (gdf.gvi_score - np.min(gdf.gvi_score)) / (
-        np.max(gdf.gvi_score) - np.min(gdf.gvi_score)
+    gdf["gvi_norm"] = (gdf[score_field] - np.min(gdf[score_field])) / (
+        np.max(gdf[score_field]) - np.min(gdf[score_field])
     )
     gdf["html_color"] = gdf["gvi_norm"].apply(
         lambda x: matplotlib.colors.rgb2hex(cmap(x))
@@ -99,25 +103,25 @@ def main(
     # Pick 4 evenly-spaced values from the gvi scores to use in the legend
     legend_gvi = list(
         np.arange(
-            gdf.gvi_score.min(),
-            gdf.gvi_score.max(),
-            (gdf.gvi_score.max() - gdf.gvi_score.min()) / 4,
+            gdf[score_field].min(),
+            gdf[score_field].max(),
+            (gdf[score_field].max() - gdf[score_field].min()) / 4,
             dtype=float,
         )
     )
 
     # Generate labels by looking up what the GVI score would be for those values
     legend_label_1 = round(
-        np.linspace(gdf.gvi_score.min(), gdf.gvi_score.max(), 100)[0], 1
+        np.linspace(gdf[score_field].min(), gdf[score_field].max(), 100)[0], 1
     )
     legend_label_2 = round(
-        np.linspace(gdf.gvi_score.min(), gdf.gvi_score.max(), 100)[33], 1
+        np.linspace(gdf[score_field].min(), gdf[score_field].max(), 100)[33], 1
     )
     legend_label_3 = round(
-        np.linspace(gdf.gvi_score.min(), gdf.gvi_score.max(), 100)[66], 1
+        np.linspace(gdf[score_field].min(), gdf[score_field].max(), 100)[66], 1
     )
     legend_label_4 = round(
-        np.linspace(gdf.gvi_score.min(), gdf.gvi_score.max(), 100)[99], 1
+        np.linspace(gdf[score_field].min(), gdf[score_field].max(), 100)[99], 1
     )
 
     # Normalise the label values to lookup against the colourmap
