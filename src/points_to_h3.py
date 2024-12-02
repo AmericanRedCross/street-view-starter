@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 import geopandas as gpd
+import pandas as pd
 import h3pandas  # noqa: F401
 import typer
 
@@ -82,14 +83,21 @@ def main(
     gdf = gpd.read_file(input_file)
 
     # Exclude points with no GVI score
-    gdf = gdf[~gdf.gvi_score.isna()]
+    gdf = gdf[~gdf[score_field].isna()]
+
+    # Check score field is numeric - if not, convert
+    if gdf[score_field].dtype == pd.StringDtype: 
+        try: 
+            gdf[score_field] = pd.to_numeric(gdf[score_field])
+        except Exception as e:
+            raise Exception("Could not convert score field to numeric data type")
 
     # Assign points to h3 cells at the selected resolution
     gdf_h3 = gdf.h3.geo_to_h3(cell_resolution).reset_index()
 
     # Aggregate the points to the assigned h3 cell
     gvi_mean = gdf_h3.groupby("h3_" + f"{cell_resolution:02}").agg(
-        {"gvi_score": "mean"}
+        {score_field: "mean"}
     )
 
     # Convert the h3 cells to polygons
