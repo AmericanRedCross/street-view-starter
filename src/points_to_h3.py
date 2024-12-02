@@ -22,7 +22,7 @@ def main(
         typer.Argument(help="Path to file containing point layer with GVI scores."),
     ],
     score_field: Annotated[
-        str, 
+        str,
         typer.Argument(help="Field containing the score"),
     ],
     output_file: Annotated[
@@ -74,7 +74,7 @@ def main(
         raise Exception("Expected point data in interim data file but none found")
 
     # Check data contains score field
-    if score_field in  gpd.read_file(input_file).columns: 
+    if score_field in gpd.read_file(input_file).columns:
         pass
     else:
         raise Exception("Specified score field not found in input file")
@@ -86,8 +86,8 @@ def main(
     gdf = gdf[~gdf[score_field].isna()]
 
     # Check score field is numeric - if not, convert
-    if gdf[score_field].dtype == pd.StringDtype: 
-        try: 
+    if gdf[score_field].dtype == pd.StringDtype:
+        try:
             gdf[score_field] = pd.to_numeric(gdf[score_field])
         except Exception as e:
             raise Exception("Could not convert score field to numeric data type")

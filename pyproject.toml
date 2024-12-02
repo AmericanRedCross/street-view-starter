@@ -18,7 +18,7 @@ dependencies = [
   "geopandas",
   "geopy",
   "h3 <4",
-  "h3pandas,
+  "h3pandas",
   "loguru",
   "mapclassify",
   "matplotlib",
