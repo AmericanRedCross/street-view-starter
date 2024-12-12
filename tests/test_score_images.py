@@ -1,6 +1,6 @@
 from typer.testing import CliRunner
 
-from src.assign_gvi_to_points import app
+from src.score_images import app
 
 runner = CliRunner(mix_stderr=False)
 

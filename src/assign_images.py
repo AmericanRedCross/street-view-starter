@@ -31,6 +31,12 @@ def main(
         Path,
         Argument(help="Where the images should be located"),
     ],
+    output_file: Annotated[
+        Path,
+        Argument(
+            help="File to write output data to (can specify any GDAL-supported format)."
+        ),
+    ],
     max_distance: Annotated[
         float,
         Option(help="Maximum distance between point and image location, in meters"),
@@ -44,6 +50,7 @@ def main(
             File format should be readable by geopandas.read_file
         image_source: Where to get images from
         images_path: Where the images should be located
+        output_file: file to save GeoPackage output to (provide full path)
         max_distance: Maximum distance between point and image location, in meters
             Can also be interpreted as "radius" of image bounding box
         verbose: Sets log level to DEBUG
@@ -101,7 +108,7 @@ def main(
         .any(),
     )
 
-    output_file = Path(points_file.parent, f"{points_file.stem}_images.gpkg").resolve()
+    output_file = output_file.resolve()
     gdf.to_file(output_file, driver="GPKG")
     log.success("Saved Points and Images to {}", output_file)
 

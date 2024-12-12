@@ -33,7 +33,9 @@ dependencies = [
   "scikit-image",
   "shapely",
   "stamina",
+  "torch",
   "tqdm",
+  "transformers",
   "typer",
   "typer-config",
 ]
