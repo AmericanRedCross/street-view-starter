@@ -17,10 +17,12 @@ from src.scoring.scoring_method import ScoringMethod
 class Segmentation(ScoringMethod):
     score_name = "segmentation_gvi"
 
-    def __init__(self):
+    def __init__(self, crop: float) -> None:
         """
         Initializes processor and segmentation model
         """
+
+        self.crop = crop
         # Load the pretrained AutoImageProcessor from
         # "facebook/mask2former-swin-large-cityscapes-semantic"
         self.processor = AutoImageProcessor.from_pretrained(
@@ -46,6 +48,7 @@ class Segmentation(ScoringMethod):
         Returns: the index score as a float
 
         """
+        segmented_images_path = Path(Path(__file__).parent.parent, "data/interim/segmentations")
 
         try:
             # Fetch and process the image
@@ -55,17 +58,17 @@ class Segmentation(ScoringMethod):
             width, height = image.size
             # Crop the bottom 20% of the image to remove the band
             # at the bottom of the panoramic image
-            bottom_crop = int(height * 0.2)
+            bottom_crop = int(height * self.crop)
             image = image.crop((0, 0, width, height - bottom_crop))
             # Apply the semantic segmentation to the image
             segmentation = self._segment_images(image)
             # Cut panoramic image in 4 equal parts
             # Crop the image and its segmentation based on
             # the previously found road centers
-            images, pickles = self._crop_panoramic_images(image, segmentation)
+            images, segmentations = self._crop_panoramic_images(image, segmentation)
             # Calculate the Green View Index (GVI) for the cropped segmentations
-            GVI, segment_scores = self._get_GVI(pickles)
-            return GVI
+            gvi, segment_scores = self._get_gvi(segmentations)
+            return gvi
         except Exception as ex:
             log.error(ex)
 
@@ -117,7 +120,7 @@ class Segmentation(ScoringMethod):
         h4 = int(height / 4)
         hFor43 = int(w4 * 3 / 4)
         images = []
-        pickles = []
+        segmentations = []
         # Crop the panoramic image based on road centers
         for w in range(4):
             x_begin = w * w4
@@ -125,10 +128,10 @@ class Segmentation(ScoringMethod):
             cropped_image = image.crop((x_begin, h4, x_end, h4 + hFor43))
             cropped_segmentation = segmentation[h4 : h4 + hFor43, x_begin:x_end]
             images.append(cropped_image)
-            pickles.append(cropped_segmentation)
-        return images, pickles
+            segmentations.append(cropped_segmentation)
+        return images, segmentations
 
-    def _get_GVI(self, segmentations: list[torch.Tensor]):
+    def _get_gvi(self, segmentations: list[torch.Tensor]):
         """
         Calculates the Segmentation GVI for a list of segmentations
         Args:
