@@ -17,6 +17,7 @@ dependencies = [
   "folium",
   "geopandas",
   "geopy",
+  "h3 <4",
   "h3pandas",
   "loguru",
   "mapclassify",

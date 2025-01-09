@@ -2,7 +2,8 @@ import os
 from pathlib import Path
 
 import geopandas as gpd
-import h3pandas  # noqa: F401
+import h3pandas  # noqa: F401  # noqa: F401
+import pandas as pd
 import typer
 
 try:
@@ -19,6 +20,10 @@ def main(
     input_file: Annotated[
         Path,
         typer.Argument(help="Path to file containing point layer with GVI scores."),
+    ],
+    score_field: Annotated[
+        str,
+        typer.Argument(help="Field containing the score"),
     ],
     output_file: Annotated[
         Path,
@@ -39,6 +44,7 @@ def main(
 
     Args:
             input_file: Path to file containing point layer with GVI scores.
+            score_field: The field name from the input data containing the score
             cell_resolution: H3 cell resolution to aggregate to,
                 between 0 (largest) and 15 (smallest)
             aggregation_operations:
@@ -67,20 +73,31 @@ def main(
     else:
         raise Exception("Expected point data in interim data file but none found")
 
-    # Check data contains numeric gvi_score field
+    # Check data contains score field
+    if score_field in gpd.read_file(input_file).columns:
+        pass
+    else:
+        raise Exception("Specified score field not found in input file")
 
     # Load input data
     gdf = gpd.read_file(input_file)
 
     # Exclude points with no GVI score
-    gdf = gdf[~gdf.gvi_score.isna()]
+    gdf = gdf[~gdf[score_field].isna()]
+
+    # Check score field is numeric - if not, convert
+    if gdf[score_field].dtype == pd.StringDtype:
+        try:
+            gdf[score_field] = pd.to_numeric(gdf[score_field])
+        except Exception:
+            raise Exception("Could not convert score field to numeric data type")
 
     # Assign points to h3 cells at the selected resolution
     gdf_h3 = gdf.h3.geo_to_h3(cell_resolution).reset_index()
 
     # Aggregate the points to the assigned h3 cell
     gvi_mean = gdf_h3.groupby("h3_" + f"{cell_resolution:02}").agg(
-        {"gvi_score": "mean"}
+        {score_field: "mean"}
     )
 
     # Convert the h3 cells to polygons
