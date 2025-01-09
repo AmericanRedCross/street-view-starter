@@ -2,8 +2,8 @@ import os
 from pathlib import Path
 
 import geopandas as gpd
+import h3pandas  # noqa: F401  # noqa: F401
 import pandas as pd
-import h3pandas  # noqa: F401
 import typer
 
 try:
@@ -89,7 +89,7 @@ def main(
     if gdf[score_field].dtype == pd.StringDtype:
         try:
             gdf[score_field] = pd.to_numeric(gdf[score_field])
-        except Exception as e:
+        except Exception:
             raise Exception("Could not convert score field to numeric data type")
 
     # Assign points to h3 cells at the selected resolution
